@@ -1,0 +1,128 @@
+---
+title: "Practical Machine Learning Course Project"
+author: "Jordan Rinder"
+date: "July 24, 2015"
+output: html_document
+---
+
+## Data Information
+
+In this project, the goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: [http://groupware.les.inf.puc-rio.br/har][1] (see the section on the Weight Lifting Exercise Dataset). 
+
+* **Data**
+	
+	+ The Training Data can be found [here][2]
+	
+	+ The Testing Data can be found [here][3]
+
+## Loading Data
+
+In this section we will load the data into our R session along with any packages
+that we will be using
+
+```{r, echo = T}
+library(caret)
+library(randomForest)
+library(gbm)
+library(ggplot2)
+
+training <- read.csv("pml-training.csv", na.strings=c("NA","#DIV/0!",""))
+testing <- read.csv("pml-testing.csv", na.strings=c("NA","#DIV/0!",""))
+```
+
+## Cleaning the Data
+
+Now we shall clean the data by taking out the columns that are predominantly NA's and
+partitioning the training dataset so that there is a new training data set along with 
+a new testing data set. This allows us to leave the *original* testing set alone.
+
+* We partition the *original* training set so that the new training set consists of 70% 
+of the original, while the new testing set consists of 30% of the original training set
+
+* We also omit the first 7 columns as each contains information that is not useful
+for this machine learning task
+
+```{r, echo = T}
+training <- training[,colSums(is.na(training)) == 0]
+testing <- testing[,colSums(is.na(testing)) == 0]
+training <- training[, -c(1:7)]
+testing <- testing[, -c(1:7)]
+dim(training); dim(testing)
+
+subData <- createDataPartition(y = training$classe, p = 0.7, list = F)
+subTraining <- training[subData, ]
+subTesting <- training[-subData, ]
+dim(subTraining); dim(subTesting)
+```
+
+### Cross Validation Method
+
+Our Cross Validation Method is simply splitting the original training set into a
+new training and new testining set. This new testing data set can be thought of as
+a cross validation data set
+
+### Plot of the *Classe* variable
+
+```{r, echo = T}
+qplot(factor(classe), data = subTraining, geom = "bar", fill = factor(classe)) +
+	ylab("Frequency") + xlab("Classe Level") + scale_fill_discrete(name = "Classe Level")
+```
+
+## Model Selection
+
+1. Before we do anything we must the the seed so that our results are reproducable
+
+2. Our first model is the Generalized Boosted Regression Model
+
+```{r, echo = T}
+set.seed(1234)
+
+modelFit2 <- train(classe ~., data = subTraining, method = "gbm", verbose = F)
+pred2 <- predict(modelFit2, subTesting)
+gbm <- confusionMatrix(pred2, subTesting$classe)
+gbm
+```
+
+3. Our second model is generated from the Random Forest package
+
+```{r, echo = T}
+modS <- randomForest(classe ~. , data = subTraining, method = "class")
+pred3 <- predict(modS, subTesting)
+rf <- confusionMatrix(pred3, subTesting$classe)
+rf
+```
+
+4. The final step in our model selection is to analyze the models
+
+## Picking A Model / Out of Sample Error
+
+* We can see that the random forest model performs slightly better than the generalized
+boosted regression model, so we will choose it for our final model
+
+* We can also see that the out of sample error for random forests is lower
+than the out of sample error for the generalized boosted regression model 
+
+```{r, echo = T}
+accuracy <- data.frame(gbm$overall[1], rf$overall[1])
+colnames(accuracy) <- c("GBM Overall", "RF Overall")
+accuracy
+
+#Out of Sample Error
+osError <- 1 - accuracy
+rownames(osError) <- "Out of Sample Error"
+osError
+```
+
+## Building Our Final Model
+
+```{r, echo = T}
+predTest <- predict(modS, testing)
+predTest
+```
+
+
+[1]: http://groupware.les.inf.puc-rio.br/har
+[2]: https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+[3]: https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+
