@@ -1,6 +1,11 @@
 ## About This Project
 
-This project is a machine learning algorithm that predicts data based on different
-types of exercise
+This repository contains machine learning projects from a variety of sources.
 
-You can look at the ***.Rmd*** file for documentation on how this algorithm works
+You can look at the ***.Rmd*** / ***.pdf*** files for documentation on how these algorithm works.
+
+For the exercise project (Coursera), the github hosted webpage can be found 
+[here][1]
+
+
+[1]: jrinder42.github.io/MachineLearning/CourseraMachineLearning/predictClasse.html
