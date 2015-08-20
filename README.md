@@ -8,4 +8,4 @@ For the exercise project (Coursera), the github hosted webpage can be found
 [here][1]
 
 
-[1]: jrinder42.github.io/MachineLearning/CourseraMachineLearning/predictClasse.html
+[1]: http://jrinder42.github.io/MachineLearning/CourseraMachineLearning/predictClasse.html
